@@ -1250,3 +1250,62 @@ assessment-public-certificate-generator:
     parallelism.default: 1
     jobmanager.execution.failover-strategy: region
     taskmanager.memory.network.fraction: 0.1
+
+content-activity-updater:
+  content-activity-updater: |+
+    include file("/data/flink/conf/base-config.conf")
+    kafka {
+      input.topic = {{ env_name }}.content.update.state
+      groupId = {{ env_name }}-content-update-state-activity-group
+    }
+    task {
+      restart-strategy.attempts = {{ restart_attempts }} # max 3 restart attempts
+      restart-strategy.delay = 240000 # in milli-seconds # on max restarts (3) within 4 min the job will fail.
+      parallelism = {{user_activity_analysis_updater_consumer_parallelism}}
+      consumer.parallelism = {{ user_activity_analysis_updater_consumer_parallelism }}
+      generate_certificate.parallelism = {{generate_certificate_parallelism}}
+      generate_event_certificate.parallelism = {{generate_event_certificate_parallelism}}
+    }
+    lms-cassandra {
+      keyspace = "sunbird"
+      user.table = "user"
+      course_batch.table = "course_batch"
+      assessment_aggregator.table = "assessment_aggregator"
+      user_activity_agg.table = "user_activity_agg"
+    }
+
+    postgres {
+      host = "{{igot_postgres_db_ip}}"
+      port = "5432"
+      database = "sunbird"
+      username = "{{postgresql_username_sunbird}}"
+      password = "{{postgresql_password_sunbird}}"
+    }
+
+    cert_domain_url = "{{ cert_domain_url }}"
+    user_read_api = "/private/user/v1/read"
+    content_read_api = "/content/v3/read"
+    service {
+      content.basePath = "{{ content_service_base_url }}"
+      learner.basePath = "{{ learner_service_base_url }}"
+    }
+
+    redis-meta {
+    {% if metadata2_redis_host is defined %}
+      host = {{ metadata2_redis_host }}
+    {% else %}
+      host = {{ redis_host }}
+    {% endif %}
+      port = 6379
+    }
+
+    assessment.metrics.supported.contenttype = ["SelfAssess"]
+    enable.suppress.exception = true
+
+  flink-conf: |+
+    jobmanager.memory.flink.size: {{ flink_job_names['content-activity-updater'].jobmanager_memory }}
+    taskmanager.memory.flink.size: {{ flink_job_names['content-activity-updater'].taskmanager_memory }}
+    taskmanager.numberOfTaskSlots: {{ flink_job_names['content-activity-updater'].taskslots }}
+    parallelism.default: 1
+    jobmanager.execution.failover-strategy: region
+    taskmanager.memory.network.fraction: 0.1

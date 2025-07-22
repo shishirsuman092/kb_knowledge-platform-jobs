@@ -146,6 +146,12 @@ user_activity_analysis_updater_parallelism: 1
 user_activity_analysis_updater_enable_suppress_exception: false
 user_activity_analysis_updater_enable_rc_certificate: true
 
+###  content_activity_updater Job related Vars
+content_activity_updater_consumer_parallelism: 1
+content_activity_updater_parallelism: 1
+content_activity_updater_enable_suppress_exception: false
+content_activity_updater_enable_rc_certificate: true
+
 ### Program Cert Pre Processor
 program_cert_pre_processor_consumer_parallelism: 1
 generate_certificate_parallelism: 1
@@ -281,6 +287,13 @@ flink_job_names:
     cpu_requests: 0.3
   user-activity-analysis-updater:
     job_class_name: 'org.sunbird.job.useractivity.task.UserActivityAnalysisUpdaterTask'
+    replica: 1
+    jobmanager_memory: 1024m
+    taskmanager_memory: 1024m
+    taskslots: 1
+    cpu_requests: 0.3
+  content-activity-updater:
+    job_class_name: 'org.sunbird.job.contentActivity.task.ContentActivityUpdaterTask'
     replica: 1
     jobmanager_memory: 1024m
     taskmanager_memory: 1024m
